@@ -2,59 +2,57 @@ using UnityEngine;
 
 public class PlayerMovement2D : MonoBehaviour
 {
-    [Header("Movement Settings")]
+    [Header("Movement Settings (ตั้งค่าการเดิน)")]
     public float moveSpeed = 5f;
-    
-    [Header("Movement Boundaries")]
-    [Tooltip("จุดซ้ายสุดที่เดินได้")]
     public float minX = -5f; 
-    [Tooltip("จุดขวาสุดที่เดินได้")]
     public float maxX = 5f;
 
-    [Header("Gun Sway Settings (ตั้งค่าปืนส่าย)")]
-    [Tooltip("ลากโมเดลปืนมาใส่ช่องนี้")]
-    public Transform gunTransform; 
-    [Tooltip("องศาความเอียงของปืนเวลาเดิน")]
-    public float swayAmount = 2f; 
-    [Tooltip("ความนุ่มนวลในการเอียง")]
-    public float swaySmooth = 8f; 
+    [Header("Cover Settings (จุดซ่อนตัว)")]
+    [Tooltip("ลากกล่องฝั่งซ้ายมาใส่ช่องนี้")]
+    public Transform leftCoverBox;  
+    [Tooltip("ลากกล่องฝั่งขวามาใส่ช่องนี้")]
+    public Transform rightCoverBox; 
+    [Tooltip("ความเร็วในการพุ่งไปหลบหลังกล่อง")]
+    public float slideSpeed = 10f;  
 
-    private Quaternion initialGunRotation;
-
-    void Start()
-    {
-        // บันทึกค่าการหมุนดั้งเดิมของปืนเอาไว้ตอนเริ่มเกม
-        if (gunTransform != null)
-        {
-            initialGunRotation = gunTransform.localRotation;
-        }
-    }
+    // สถานะว่ากำลังหลบอยู่หรือไม่
+    private bool isCovering = false;
+    private float targetX;
 
     void Update()
     {
-        // 1. รับค่าการกดปุ่ม A, D หรือ ลูกศรซ้าย-ขวา (A = -1, D = 1)
-        float moveInput = Input.GetAxisRaw("Horizontal");
-
-        // 2. คำนวณตำแหน่งใหม่บนแกน X
-        Vector3 newPosition = transform.position + new Vector3(moveInput, 0f, 0f) * moveSpeed * Time.deltaTime;
-
-        // 3. ล็อกระยะไม่ให้เดินเลยขอบเขตที่กำหนด
-        newPosition.x = Mathf.Clamp(newPosition.x, minX, maxX);
-
-        // 4. อัปเดตตำแหน่งของตัวละคร/กล้อง
-        transform.position = newPosition;
-
-        // 5. ระบบทำให้ปืนเอียงตามการเคลื่อนที่ (Weapon Sway)
-        if (gunTransform != null)
+        // 1. กด Q พุ่งไปกล่องซ้าย, กด E พุ่งไปกล่องขวา
+        if (Input.GetKeyDown(KeyCode.Q) && leftCoverBox != null)
         {
-            // คำนวณทิศทางการเอียง (เดินขวา ปืนเอนซ้าย / เดินซ้าย ปืนเอนขวา)
-            float targetSwayZ = -moveInput * swayAmount;
+            isCovering = true;
+            targetX = leftCoverBox.position.x; 
+        }
+        else if (Input.GetKeyDown(KeyCode.E) && rightCoverBox != null)
+        {
+            isCovering = true;
+            targetX = rightCoverBox.position.x; 
+        }
 
-            // สร้างองศาการหมุนใหม่
-            Quaternion targetRotation = initialGunRotation * Quaternion.Euler(0f, 0f, targetSwayZ);
+        // 2. ถ้ากดปุ่มเดิน A/D จะเป็นการสั่งให้ "ออกจากที่ซ่อน"
+        float moveInput = Input.GetAxisRaw("Horizontal");
+        if (moveInput != 0 && isCovering)
+        {
+            isCovering = false; 
+        }
 
-            // ค่อยๆ หมุนปืนไปยังองศาใหม่แบบนุ่มนวล
-            gunTransform.localRotation = Quaternion.Lerp(gunTransform.localRotation, targetRotation, Time.deltaTime * swaySmooth);
+        // 3. ระบบเคลื่อนที่ (สลับระหว่างพุ่งไปหลบ กับ เดินปกติ)
+        if (isCovering)
+        {
+            // สไลด์กล้องไปที่ตำแหน่งแกน X ของกล่องเป้าหมาย
+            float newX = Mathf.Lerp(transform.position.x, targetX, Time.deltaTime * slideSpeed);
+            transform.position = new Vector3(newX, transform.position.y, transform.position.z);
+        }
+        else
+        {
+            // ระบบเดินซ้าย-ขวาตามปกติ
+            float newX = transform.position.x + (moveInput * moveSpeed * Time.deltaTime);
+            newX = Mathf.Clamp(newX, minX, maxX);
+            transform.position = new Vector3(newX, transform.position.y, transform.position.z);
         }
     }
 }
