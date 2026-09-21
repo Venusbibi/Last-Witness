@@ -16,7 +16,7 @@ public class PlayerMovement2D : MonoBehaviour
     public float slideSpeed = 10f;  
 
     // สถานะว่ากำลังหลบอยู่หรือไม่
-    private bool isCovering = false;
+    public bool isCovering = false;
     private float targetX;
 
     void Update()

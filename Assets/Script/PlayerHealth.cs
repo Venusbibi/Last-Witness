@@ -1,66 +1,98 @@
 using UnityEngine;
+using UnityEngine.UI; 
 
 public class PlayerHealth : MonoBehaviour
 {
-    [Header("Player Stats (ตั้งค่าเลือด)")]
-    public int maxHealth = 6; // เลือดสูงสุด 6 ช่องตามรูป
+    [Header("Health Settings")]
+    public int maxHealth = 6;
     private int currentHealth;
 
-    [Header("UI Settings (เชื่อมต่อหน้าจอ)")]
-    [Tooltip("ลากรูปช่องเลือด HP1 ถึง HP6 มาใส่เรียงตามลำดับ")]
+    [Header("UI Blocks")]
     public GameObject[] healthBlocks; 
+
+    [Header("Heart Icon Settings")]
+    public Image heartImage;          
+    public Sprite fullHeartSprite;    // รูปหัวใจปกติ
+    public Sprite hurtHeartSprite;    // รูปหัวใจตอนโดนยิง
+    public Sprite deadHeartSprite;    // รูปหัวใจตอนตาย
+
+    // ตัวแปรสำหรับนับเวลาโชว์รูปโดนยิง
+    private float hurtTimer = 0f;
 
     void Start()
     {
-        // เริ่มเกมมาให้เลือดเต็ม 6 ช่อง
         currentHealth = maxHealth;
-        UpdateHealthUI();
+        
+        // เริ่มเกมมา ให้เลือดเต็มและโชว์รูปปกติ
+        UpdateHealthBlocks();
+        if (heartImage != null)
+        {
+            heartImage.sprite = fullHeartSprite;
+        }
     }
 
     void Update()
     {
-        // ระบบทดสอบ: กดปุ่ม T เพื่อจำลองการโดนศัตรูโจมตี 1 ดาเมจ
-        if (Input.GetKeyDown(KeyCode.T))
+        // ถ้านับเวลายังมากกว่า 0 และผู้เล่นยังไม่ตาย
+        if (hurtTimer > 0 && currentHealth > 0)
         {
-            TakeDamage(1); 
+            hurtTimer -= Time.deltaTime; // นับเวลาถอยหลังตามเวลาจริง
+
+            // เมื่อเวลาหมด (ครบ  วิ) ให้เปลี่ยนกลับเป็นรูปหัวใจปกติ
+            if (hurtTimer <= 0 && heartImage != null)
+            {
+                heartImage.sprite = fullHeartSprite;
+            }
         }
     }
 
-    // ฟังก์ชันรับดาเมจ (ศัตรูจะเรียกใช้ฟังก์ชันนี้เวลายิงโดนเรา)
-    public void TakeDamage(int damageAmount)
+    public void TakeDamage(int damage)
     {
-        currentHealth -= damageAmount;
+        currentHealth -= damage;
         
-        // ป้องกันไม่ให้เลือดติดลบ
-        if (currentHealth < 0) currentHealth = 0;
-        
-        Debug.Log("ผู้เล่นโดนโจมตี! เลือดเหลือ: " + currentHealth);
-        UpdateHealthUI();
+        if (currentHealth < 0) currentHealth = 0; 
 
-        if (currentHealth <= 0)
+        UpdateHealthBlocks(); // อัปเดตช่องเลือดสีแดง
+
+        if (currentHealth > 0)
         {
+            // ถ้ายิงโดนแต่ยังไม่ตาย -> โชว์รูปโดนยิง และรีเซ็ตเวลาเป็น  วินาทีใหม่
+            if (heartImage != null)
+            {
+                heartImage.sprite = hurtHeartSprite;
+                hurtTimer = 1f; // ตั้งเวลานับถอยหลัง  วินาที
+            }
+        }
+        else if (currentHealth == 0)
+        {
+            // ถ้าตาย -> โชว์รูปตาย และหยุดนับเวลา
+            if (heartImage != null)
+            {
+                heartImage.sprite = deadHeartSprite;
+            }
+            hurtTimer = 0f; 
             Die();
         }
     }
 
-    void UpdateHealthUI()
+    void UpdateHealthBlocks()
     {
-        // วนลูปเพื่อเปิด/ปิดรูปช่องเลือดตามจำนวนเลือดที่เหลืออยู่
+        // เปิด/ปิด ช่องเลือดสีแดงตามจำนวนเลือดที่เหลือ
         for (int i = 0; i < healthBlocks.Length; i++)
         {
-            if (i < currentHealth)
+            if (healthBlocks[i] != null)
             {
-                healthBlocks[i].SetActive(true);  // เลือดเหลือ -> โชว์ช่องสีแดง
-            }
-            else
-            {
-                healthBlocks[i].SetActive(false); // เลือดลด -> ซ่อนช่องสีแดง (หรือถ้ามีรูปช่องว่างสีดำ ก็สั่งเปลี่ยนรูปแทนการ SetActive ได้)
+                healthBlocks[i].SetActive(i < currentHealth);
             }
         }
     }
 
     void Die()
     {
-        Debug.Log("ผู้เล่นตาย! (Game Over)");
+        Debug.Log("ผู้เล่นตาย!");
+        if (GameManager.instance != null)
+        {
+            GameManager.instance.GameOver();
+        }
     }
 }

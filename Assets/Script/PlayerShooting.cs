@@ -20,6 +20,10 @@ public class PlayerShooting : MonoBehaviour
     [Header("Effects (เอฟเฟกต์)")]
     public GameObject muzzleFlash;
 
+    [Header("Cooldown Settings")]
+    public float fireRate = 20f; 
+    private float nextFireTime = -1f; // ตัวแปรซ่อนไว้จำเวลาที่อนุญาตให้ยิงนัดถัดไป
+
     void Start()
     {
         currentAmmo = maxAmmo;
@@ -32,19 +36,14 @@ public class PlayerShooting : MonoBehaviour
         }
     }
 
-    void Update()
+   void Update()
     {
-        // ใช้ GetButtonDown เพื่อให้ยิงทีละนัด
-        if (Input.GetButtonDown("Fire1"))
+        // เปลี่ยนเป็น GetButtonDown (บังคับคลิกทีละนัด)
+        // และเพิ่มเงื่อนไข currentAmmo > 0 (กระสุนต้องมีมากกว่า 0 ถึงจะยิงได้)
+        if (Input.GetButtonDown("Fire1") && Time.time >= nextFireTime && currentAmmo > 0)
         {
-            if (currentAmmo > 0)
-            {
-                Shoot();
-            }
-            else
-            {
-                Debug.Log("กระสุนหมด!");
-            }
+            Shoot(); 
+            nextFireTime = Time.time + fireRate; 
         }
     }
 
@@ -67,10 +66,19 @@ public class PlayerShooting : MonoBehaviour
         Vector3 rayOrigin = fpsCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0.0f));
         RaycastHit hit;
 
-        if (Physics.Raycast(rayOrigin, fpsCamera.transform.forward, out hit, weaponRange))
-        {
-            Debug.Log("ปัง! ยิงโดน: " + hit.transform.name);
-        }
+       if (Physics.Raycast(rayOrigin, fpsCamera.transform.forward, out hit, weaponRange))
+{
+    Debug.Log("ยิงโดน: " + hit.transform.name);
+
+    // เช็คว่าสิ่งที่เรายิงโดน มีสคริปต์ EnemyHealth แปะอยู่ไหม
+    EnemyHealth target = hit.transform.GetComponent<EnemyHealth>();
+    
+    // ถ้ามีสคริปต์นี้ (แปลว่าเป็นศัตรู) ให้สั่งลดเลือด 1 ดาเมจ
+    if (target != null)
+    {
+        target.TakeDamage(1);
+    }
+}
     }
 
     // ฟังก์ชันสำหรับปิดเอฟเฟกต์
