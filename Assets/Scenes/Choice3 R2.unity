@@ -786,7 +786,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   gameOverPanel: {fileID: 955765074}
   winPanel: {fileID: 0}
-  storySceneName: StoryScene
 --- !u!4 &919683768
 Transform:
   m_ObjectHideFlags: 0
@@ -1689,19 +1688,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1470697129}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1468154965}
-        m_TargetAssemblyTypeName: SceneLoader, Assembly-CSharp
-        m_MethodName: GoToScene
-        m_Mode: 5
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: Round2
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1470697129
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -939,7 +939,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DelayedButton
   nextButton: {fileID: 1476151008}
-  delayTime: 5
+  delayTime: 3
 --- !u!4 &2039179061
 Transform:
   m_ObjectHideFlags: 0

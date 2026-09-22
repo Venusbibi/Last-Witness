@@ -30,8 +30,8 @@ public class PlayerShooting : MonoBehaviour
     public int maxAllowedShots;       
     
     [Header("UI Panels (ลากหน้าต่าง UI มาใส่)")]
-    public GameObject gameOverPanel;  // หน้าต่างแพ้ (You Died)
-    public GameObject nextStagePanel; // หน้าต่างชนะเมื่อศัตรูตาย
+    public GameObject gameOverPanel;  
+    public GameObject nextStagePanel; 
 
     void Start()
     {

@@ -573,6 +573,7 @@ GameObject:
   - component: {fileID: 260810770}
   - component: {fileID: 260810769}
   - component: {fileID: 260810771}
+  - component: {fileID: 260810772}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -594,7 +595,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   gameOverPanel: {fileID: 1038559376}
   winPanel: {fileID: 2067432329}
-  storySceneName: StoryScene
 --- !u!4 &260810770
 Transform:
   m_ObjectHideFlags: 0
@@ -624,6 +624,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameData
   currentAmmo: 6
   maxAmmo: 6
+--- !u!114 &260810772
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 260810768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b81a5c5c0a2a1ce46be720b1b2df6644, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneLoader
 --- !u!1 &293545737 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5318273120908441145, guid: 79c65a10786a7ce4d94e4a8d1eab05a0, type: 3}
@@ -1078,6 +1090,7 @@ MonoBehaviour:
   fireRate: 0.5
   maxAllowedShots: 2
   gameOverPanel: {fileID: 1038559376}
+  nextStagePanel: {fileID: 0}
 --- !u!114 &358234418
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1549,6 +1562,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 2
+  currentHealth: 0
   healthBlocks:
   - {fileID: 1321688381}
   - {fileID: 1835968625}
@@ -2373,16 +2387,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 260810769}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: GoToStoryScene
-        m_Mode: 1
+      - m_Target: {fileID: 260810772}
+        m_TargetAssemblyTypeName: SceneLoader, Assembly-CSharp
+        m_MethodName: GoToScene
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Answer
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &753014467
@@ -3285,7 +3299,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1038559377
 MonoBehaviour:
   m_ObjectHideFlags: 0

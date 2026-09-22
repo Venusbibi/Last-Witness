@@ -9,9 +9,7 @@ public class GameManager : MonoBehaviour
     public GameObject gameOverPanel;
     public GameObject winPanel;
 
-    [Header("Scene Settings")]
-    public string storySceneName = "StoryScene"; 
-
+    
     void Awake()
     {
         if (instance == null) 
@@ -67,9 +65,5 @@ public class GameManager : MonoBehaviour
         #endif
     }
 
-    public void GoToStoryScene()
-    {
-        Time.timeScale = 1f; 
-        SceneManager.LoadScene(3);
-    }
+  
 }
