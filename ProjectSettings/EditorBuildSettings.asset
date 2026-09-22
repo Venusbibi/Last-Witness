@@ -12,11 +12,47 @@ EditorBuildSettings:
     path: Assets/Scenes/Cut Scenes.unity
     guid: 1d7d2d52fe90a8c45a2e1fca9dbdcf06
   - enabled: 1
-    path: Assets/Scenes/Scenes1.unity
+    path: Assets/Scenes/Round1.unity
     guid: 783846181f3892349a639e9d364a6981
   - enabled: 1
-    path: Assets/Scenes/StoryScene.unity
+    path: Assets/Scenes/Round2.unity
+    guid: 64dbd9c87b2e6cf4794d5825aa8ac32d
+  - enabled: 1
+    path: Assets/Scenes/Choice1 R1.unity
+    guid: 9175b6481bfa7a84eb60c0734b6eb236
+  - enabled: 1
+    path: Assets/Scenes/Choice1 R1.unity
     guid: 3df39e8889311064c9f9a721d17b65b3
+  - enabled: 1
+    path: Assets/Scenes/Choice2 R1.unity
+    guid: 05a9d9836a00f8445b7531fd9f5b6cbb
+  - enabled: 1
+    path: Assets/Scenes/Choice3 R1.unity
+    guid: 85ee7428069151d4ab85b9fa58910796
+  - enabled: 1
+    path: Assets/Scenes/Choice4 R1.unity
+    guid: e0095f4915382f04dbfd455f96020ab3
+  - enabled: 1
+    path: Assets/Scenes/Choice5 R1.unity
+    guid: 66cb73ee8eee5ff46a2ee0a1e1c15e88
+  - enabled: 1
+    path: Assets/Scenes/Final Answer.unity
+    guid: c4147203a98adfa458084b9874ff3e32
+  - enabled: 1
+    path: Assets/Scenes/Choice1 R2.unity
+    guid: 6e8e171a7e88e54469c660777cd682ce
+  - enabled: 1
+    path: Assets/Scenes/Choice2 R2.unity
+    guid: ce4b77e44a29b394a9770dffe8cc9017
+  - enabled: 1
+    path: Assets/Scenes/Choice3 R2.unity
+    guid: 09ef77b983145fe47b4f3329a8174d58
+  - enabled: 1
+    path: Assets/Scenes/Choice4 R2.unity
+    guid: 89516d54406f33143900f6f8699f9f44
+  - enabled: 1
+    path: Assets/Scenes/Choice5 R2.unity
+    guid: 514276534ce14f94c9d2e1fb47fbaef0
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

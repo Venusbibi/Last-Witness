@@ -4,7 +4,7 @@ using UnityEngine.UI;
 public class EnemyHealth : MonoBehaviour
 {
     [Header("Health Settings")]
-    public int maxHealth = 6; 
+    public int maxHealth = 2; 
     private int currentHealth;
 
     [Header("UI Settings (เชื่อมต่อหน้าจอ)")]
@@ -48,6 +48,7 @@ public class EnemyHealth : MonoBehaviour
     {
         Debug.Log("ศัตรูตายแล้ว!");
         
+        // เรียกฟังก์ชันชัยชนะ (Victory) จาก GameManager ที่เราทำไว้
         if (GameManager.instance != null) 
         {
             GameManager.instance.Victory(); 

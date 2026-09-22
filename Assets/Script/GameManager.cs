@@ -10,11 +10,18 @@ public class GameManager : MonoBehaviour
     public GameObject winPanel;
 
     [Header("Scene Settings")]
-    public string storySceneName = "StoryScene"; // ใส่ชื่อ Scene สำหรับเข้าสู่เนื้อเรื่องและเหตุการณ์
+    public string storySceneName = "StoryScene"; 
 
     void Awake()
     {
-        if (instance == null) instance = this;
+        if (instance == null) 
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     void Start()
@@ -25,32 +32,44 @@ public class GameManager : MonoBehaviour
 
     public void GameOver()
     {
-        if (gameOverPanel != null) gameOverPanel.SetActive(true);
+        if (gameOverPanel != null) 
+        {
+            gameOverPanel.SetActive(true);
+        }
         Time.timeScale = 0f; 
     }
 
     public void Victory()
     {
-        if (winPanel != null) winPanel.SetActive(true);
-        Time.timeScale = 0f; // หยุดเวลาตอนชนะ
+        if (winPanel != null) 
+        {
+            winPanel.SetActive(true);
+        }
+        Time.timeScale = 0f; 
     }
 
     public void RestartGame()
     {
         Time.timeScale = 1f; 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        SceneManager.LoadScene(0);
     }
 
     public void ExitGame()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(0); 
+
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #elif UNITY_WEBGL
+        Application.OpenURL("about:blank");
+        #else
+        Application.Quit();
+        #endif
     }
 
-    // ฟังก์ชันเปลี่ยนซีนเข้าสู่เนื้อเรื่อง (ตาม Game Loop)
     public void GoToStoryScene()
     {
-        Time.timeScale = 1f; // คืนค่าเวลาก่อนเปลี่ยนฉาก
+        Time.timeScale = 1f; 
         SceneManager.LoadScene(3);
     }
 }
