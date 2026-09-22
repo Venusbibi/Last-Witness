@@ -554,7 +554,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 536159991}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
         m_MethodName: RestartGame
         m_Mode: 1
@@ -1311,6 +1311,7 @@ MonoBehaviour:
   fireRate: 0.5
   maxAllowedShots: 2
   gameOverPanel: {fileID: 550599130}
+  nextStagePanel: {fileID: 1088840039}
 --- !u!114 &413969637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1629,6 +1630,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 4
+  currentHealth: 4
   healthBlocks:
   - {fileID: 574809272}
   - {fileID: 469245429}
@@ -2106,7 +2108,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 536159992}
-  - component: {fileID: 536159991}
   - component: {fileID: 536159993}
   m_Layer: 0
   m_Name: GameManager
@@ -2115,21 +2116,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &536159991
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 536159990}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 50c3041cb88eb5645a26f4f1e58938e1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  gameOverPanel: {fileID: 550599130}
-  winPanel: {fileID: 1088840039}
-  storySceneName: StoryScene
 --- !u!4 &536159992
 Transform:
   m_ObjectHideFlags: 0
@@ -5457,7 +5443,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 536159991}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
         m_MethodName: ExitGame
         m_Mode: 1

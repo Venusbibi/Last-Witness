@@ -5,7 +5,7 @@ public class EnemyHealth : MonoBehaviour
 {
     [Header("Health Settings")]
     public int maxHealth = 2; 
-    private int currentHealth;
+    public float currentHealth;
 
     [Header("UI Settings (เชื่อมต่อหน้าจอ)")]
     [Tooltip("ลาก UI ช่องเลือดบนหัวศัตรูมาใส่ตามลำดับ (ช่อง 1, ช่อง 2, ...)")]

@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement; 
 
 public class PlayerShooting : MonoBehaviour
 {
@@ -25,13 +26,33 @@ public class PlayerShooting : MonoBehaviour
     private float nextFireTime = -1f; 
 
     [Header("Round Rules (เงื่อนไขการยิง)")]
-    private int shotsFired = 0;       // นับจำนวนครั้งที่ยิงไป
-    public int maxAllowedShots = 2;   // จำกัดให้ยิงได้ไม่เกิน 2 นัด (สำหรับ Round 1)
-    public GameObject gameOverPanel;  // หน้าต่าง Game Over (ถ้ามี)
+    private int shotsFired = 0;       
+    public int maxAllowedShots;       
+    
+    [Header("UI Panels (ลากหน้าต่าง UI มาใส่)")]
+    public GameObject gameOverPanel;  // หน้าต่างแพ้ (You Died)
+    public GameObject nextStagePanel; // หน้าต่างชนะเมื่อศัตรูตาย
 
     void Start()
     {
-        maxAmmo = 6; // กำหนดให้สูงสุดแสดงผล 6 นัด
+        maxAmmo = 6; 
+        
+        // กำหนดโควต้าตามฉาก: Round 1 ให้ 2 นัด, Round 2 ให้ 4 นัด
+        string currentScene = SceneManager.GetActiveScene().name;
+        if (currentScene == "Round1") 
+        { 
+            maxAllowedShots = 2; 
+        }
+        else if (currentScene == "Round2") 
+        { 
+            maxAllowedShots = 4; 
+        }
+        else 
+        { 
+            maxAllowedShots = 6; 
+        }
+        
+        shotsFired = 0; 
 
         if (GameData.instance != null)
         {
@@ -45,20 +66,20 @@ public class PlayerShooting : MonoBehaviour
 
         UpdateAmmoUI();
         
-        if (muzzleFlash != null)
-        {
-            muzzleFlash.SetActive(false);
-        }
-
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(false);
-        }
+        if (muzzleFlash != null) muzzleFlash.SetActive(false);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (nextStagePanel != null) nextStagePanel.SetActive(false);
+        
+        Time.timeScale = 1f; 
     }
 
     void Update()
     {
-        if (Input.GetButtonDown("Fire1") && Time.time >= nextFireTime && currentAmmo > 0)
+        // ถ้าหน้าต่างผลลัพธ์ (ชนะ/แพ้) เปิดอยู่ จะไม่ให้ยิงต่อ
+        bool isUIVisible = (gameOverPanel != null && gameOverPanel.activeSelf) || 
+                           (nextStagePanel != null && nextStagePanel.activeSelf);
+        
+        if (Input.GetButtonDown("Fire1") && Time.time >= nextFireTime && currentAmmo > 0 && !isUIVisible)
         {
             Shoot(); 
             nextFireTime = Time.time + fireRate; 
@@ -68,12 +89,9 @@ public class PlayerShooting : MonoBehaviour
     void Shoot()
     {
         currentAmmo--;
-        shotsFired++; // บันทึกว่ามีการยิงเกิดขึ้น 1 นัด
+        shotsFired++; 
 
-        if (GameData.instance != null)
-        {
-            GameData.instance.currentAmmo = currentAmmo;
-        }
+        if (GameData.instance != null) GameData.instance.currentAmmo = currentAmmo;
 
         UpdateAmmoUI(); 
 
@@ -86,41 +104,48 @@ public class PlayerShooting : MonoBehaviour
 
         Vector3 rayOrigin = fpsCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0.0f));
         RaycastHit hit;
+        
+        bool enemyKilled = false;
 
-        bool hitEnemy = false;
         if (Physics.Raycast(rayOrigin, fpsCamera.transform.forward, out hit, weaponRange))
         {
-            Debug.Log("ยิงโดน: " + hit.transform.name);
-
             EnemyHealth target = hit.transform.GetComponent<EnemyHealth>();
             if (target != null)
             {
                 target.TakeDamage(damage); 
-                hitEnemy = true;
+                
+                // เช็คว่ายิงนัดนี้แล้วศัตรูตายเลยหรือไม่
+                if (target.currentHealth <= 0)
+                {
+                    enemyKilled = true;
+                }
             }
         }
 
-        // เงื่อนไข: ถ้าครบโควต้า 2 นัดแล้ว (หรือยิงเกิน 2 นัด) แต่ศัตรูยังไม่ตาย / ยิงพลาด ให้แสดงหน้า Game Over
-        if (shotsFired >= maxAllowedShots)
+        // ถ้าศัตรูตาย ให้เด้ง UI ชนะขึ้นมาทันที
+        if (enemyKilled)
         {
-            // สามารถเพิ่มเช็คว่าถ้าศัตรูยังไม่ตาย หรือจะให้จบเกมทันทีหลังยิงครบ 2 นัด
-            Invoke("CheckGameOverCondition", 0.5f);
+            Debug.Log("ศัตรูตายแล้ว! แสดง UI ทันที");
+            if (nextStagePanel != null)
+            {
+                nextStagePanel.SetActive(true);
+                Time.timeScale = 0f; // หยุดเกมทันที
+            }
+        }
+        // ถ้าศัตรูยังไม่ตาย แต่ยิงจนครบโควต้าแล้ว ให้เด้ง Game Over
+        else if (shotsFired >= maxAllowedShots)
+        {
+            Invoke("ShowGameOver", 0.3f); 
         }
     }
 
-    void CheckGameOverCondition()
+    void ShowGameOver()
     {
-        // ตรวจสอบว่าถ้าศัตรูยังเหลือเลือดอยู่ แล้วเรายิงครบโควต้า 2 นัดแล้ว ให้แสดง Game Over
-        EnemyHealth enemy = FindObjectOfType<EnemyHealth>();
-        if (enemy != null)
+        Debug.Log("ยิงครบโควต้า " + maxAllowedShots + " นัดแล้วแต่จัดการไม่สำเร็จ!");
+        if (gameOverPanel != null)
         {
-            // ถ้าศัตรูยังไม่ตายหลังจากยิงครบโควต้า
-            Debug.Log("ยิงเกินโควต้า 2 นัด หรือจัดการไม่สำเร็จ!");
-            if (gameOverPanel != null)
-            {
-                gameOverPanel.SetActive(true);
-                Time.timeScale = 0f;
-            }
+            gameOverPanel.SetActive(true);
+            Time.timeScale = 0f;
         }
     }
 
