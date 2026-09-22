@@ -147,8 +147,8 @@ Transform:
   m_GameObject: {fileID: 1505792}
   serializedVersion: 2
   m_LocalRotation: {x: -1, y: 0, z: 0, w: 0}
-  m_LocalPosition: {x: -0.000000023963, y: 7.899999, z: 0.00000015853}
-  m_LocalScale: {x: 1.8545687, y: 1.4685, z: 1.4685}
+  m_LocalPosition: {x: -0.00000007189, y: 7.899999, z: 0.0000001189}
+  m_LocalScale: {x: 2.1168046, y: 1.6761459, z: 1.6761459}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 443883643}
@@ -200,7 +200,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 20c20e53b4964db41a3d510d3c87bc89, type: 2}
+  - {fileID: 2100000, guid: 3620c751d2f1b0a499362c1684740bd4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1310,7 +1310,7 @@ MonoBehaviour:
   muzzleFlash: {fileID: 1278128123}
   fireRate: 0.5
   maxAllowedShots: 2
-  gameOverPanel: {fileID: 0}
+  gameOverPanel: {fileID: 550599130}
 --- !u!114 &413969637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2107,6 +2107,7 @@ GameObject:
   m_Component:
   - component: {fileID: 536159992}
   - component: {fileID: 536159991}
+  - component: {fileID: 536159993}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2144,6 +2145,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &536159993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 536159990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b81a5c5c0a2a1ce46be720b1b2df6644, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneLoader
 --- !u!1 &550599130
 GameObject:
   m_ObjectHideFlags: 0
@@ -4857,13 +4870,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1826077206}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.49762416, y: -0.5023646, z: 0.49762416, w: -0.5023646}
-  m_LocalPosition: {x: -9.169577, y: 4.0170984, z: 0.01999896}
+  m_LocalRotation: {x: -0.47265232, y: -0.5259276, z: 0.52142286, w: -0.4776173}
+  m_LocalPosition: {x: -9.96, y: 4.01, z: -0.58}
   m_LocalScale: {x: 1.0069853, y: 1, z: 0.8325069}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 443883643}
-  m_LocalEulerAnglesHint: {x: 90.54401, y: -90, z: 180}
+  m_LocalEulerAnglesHint: {x: 90.54199, y: -90, z: 174.435}
 --- !u!64 &1826077208
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4971,8 +4984,8 @@ Transform:
   m_GameObject: {fileID: 1876090640}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.00000019171, y: 0, z: -0.0000001189}
-  m_LocalScale: {x: 1.9519438, y: 1.7955023, z: 1.1447405}
+  m_LocalPosition: {x: -0.00000016775, y: 0, z: -0.0000001189}
+  m_LocalScale: {x: 2.1071231, y: 1.9382447, z: 1.2357473}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 443883643}
@@ -5805,16 +5818,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 536159991}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: GoToStoryScene
-        m_Mode: 1
+      - m_Target: {fileID: 536159993}
+        m_TargetAssemblyTypeName: SceneLoader, Assembly-CSharp
+        m_MethodName: GoToScene
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Final Answer
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &2115094213

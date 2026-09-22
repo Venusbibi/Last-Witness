@@ -1,64 +1,99 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using UnityEngine.UI; // เพิ่ม namespace สำหรับ UI
 
 public class Dialogue : MonoBehaviour
 {
-    public TextMeshProUGUI textComponent;
-    public string[] lines;
+    public TextMeshProUGUI nameTextComponent; 
+    public TextMeshProUGUI textComponent;     
+    
+    // --- โค้ดที่เพิ่มใหม่: ช่องสำหรับใส่ปุ่มที่อยากให้โผล่มาตอนคุยจบ ---
+    [Header("ปุ่มที่จะให้โผล่มาตอนคุยจบ")]
+    public GameObject buttonToShowAfterDialogue; 
+    // ---------------------------------------------------
+
+    [System.Serializable]
+    public class DialogueLine 
+    {
+        public string characterName; 
+        [TextArea(3, 10)]
+        public string sentence;      
+    }
+
+    public DialogueLine[] lines;
     public float textSpeed;
-
-    // เพิ่มตัวแปรสำหรับเก็บปุ่มช้อยส์ทั้งหมด
-    public GameObject[] choiceButtons;
-
     private int index;
 
     void Start()
     {
         textComponent.text = string.Empty;
-        
-        // ซ่อนปุ่มทั้งหมดไว้ตอนเริ่มต้น
-        HideButtons();
-        
+        if(nameTextComponent != null) 
+            nameTextComponent.text = string.Empty;
+            
+        // ตอนเริ่มเกม ให้บังคับซ่อนปุ่มไว้ก่อนอัตโนมัติ
+        if(buttonToShowAfterDialogue != null)
+        {
+            buttonToShowAfterDialogue.SetActive(false);
+        }
+
         StartDialogue();
+    }
+
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (textComponent.text == lines[index].sentence)
+            {
+                NextLine();
+            }
+            else
+            {
+                StopAllCoroutines();
+                textComponent.text = lines[index].sentence;
+            }
+        }
     }
 
     void StartDialogue()
     {
         index = 0;
+        if(nameTextComponent != null)
+            nameTextComponent.text = lines[index].characterName; 
+            
         StartCoroutine(TypeLine());
     }
 
     IEnumerator TypeLine()
     {
-        // พิมพ์ตัวอักษรทีละตัว
-        foreach (char c in lines[index].ToCharArray())
+        foreach (char c in lines[index].sentence.ToCharArray())
         {
             textComponent.text += c;
             yield return new WaitForSeconds(textSpeed);
         }
-
-        // เมื่อพิมพ์ข้อความจบแล้ว ให้แสดงปุ่มช้อยส์ขึ้นมา
-        ShowButtons();
     }
 
-    void HideButtons()
+    void NextLine()
     {
-        foreach (GameObject btn in choiceButtons)
+        if (index < lines.Length - 1)
         {
-            if (btn != null)
-                btn.SetActive(false); // ปิดการแสดงผลปุ่ม
+            index++;
+            textComponent.text = string.Empty;
+            if(nameTextComponent != null)
+                nameTextComponent.text = lines[index].characterName; 
+                
+            StartCoroutine(TypeLine());
         }
-    }
-
-    void ShowButtons()
-    {
-        foreach (GameObject btn in choiceButtons)
+        else
         {
-            if (btn != null)
-                btn.SetActive(true); // เปิดการแสดงผลปุ่มเมื่อพิมพ์เสร็จ
+            // --- โค้ดที่แก้ไขใหม่: เมื่อคุยจบหน้าสุดท้าย ---
+            // 1. เปิดปุ่มให้แสดงขึ้นมา
+            if(buttonToShowAfterDialogue != null)
+            {
+                buttonToShowAfterDialogue.SetActive(true); 
+            }
+            // 2. ปิดหน้าต่างบทสนทนาทิ้งไป
+            gameObject.SetActive(false); 
         }
     }
 }
