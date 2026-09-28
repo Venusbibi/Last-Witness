@@ -1,99 +1,125 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.SceneManagement; 
+using System.Collections;
 
 public class PlayerShooting : MonoBehaviour
 {
     [Header("Ammo Settings")]
-    public int maxAmmo = 6;         
-    private int currentAmmo;        
+    public int maxAmmo = 3;  
+    public int currentAmmo; 
+    public GameObject[] ammoIcons; 
 
     [Header("Gun Settings")]
     public float weaponRange = 50f; 
     public int damage = 1; 
     public Camera fpsCamera;        
-
-    [Header("UI Settings (เชื่อมต่อหน้าจอ)")]
-    public TextMeshProUGUI ammoText; 
-    [Tooltip("ลากรูปกระสุน Bullet1 ถึง Bullet6 มาใส่ที่นี่")]
-    public GameObject[] bulletIcons;
-
-    [Header("Effects (เอฟเฟกต์)")]
     public GameObject muzzleFlash;
-
-    [Header("Cooldown Settings")]
-    public float fireRate = 1f; 
-    private float nextFireTime = -1f; 
-
-    [Header("Round Rules (เงื่อนไขการยิง)")]
-    private int shotsFired = 0;       
-    public int maxAllowedShots;       
     
-    [Header("UI Panels (ลากหน้าต่าง UI มาใส่)")]
+    [Header("UI Settings")]
     public GameObject gameOverPanel;  
     public GameObject nextStagePanel; 
+    public TextMeshProUGUI timerText; 
+    public string countdownMessage = "MEMORIZE & AIM";
+
+    [Header("Game Flow Timing")]
+    public float countdownSpeed = 1f; 
+    public float shootTimeLimit = 3f; 
+
+    private float currentTimer;
+    private bool canShoot = false; 
+    
+    [Header("Systems")]
+    public MouseAimController aimController; 
+    public PlayerHealth playerHealth; 
+    public EnemyAttack enemyAttack; 
+    
+    public float normalSensitivity = 50f; 
+    public float slowSensitivity = 3f; 
+
+    [Header("Attack Timing Settings (ตั้งเวลาสวนกลับของบอส)")]
+    [Tooltip("ระยะเวลาที่เลเซอร์แสดงผลก่อนจะหายไป")]
+    public float laserShowDuration = 0.4f; 
+    [Tooltip("ระยะเวลาก่อนที่ Panel สีแดงจะขึ้นหลังจากเลเซอร์หาย")]
+    public float delayBeforeDamage = 0.0f; 
+    
+    private EnemyHealth targetEnemy;
 
     void Start()
     {
-        maxAmmo = 6; 
-        
-        // กำหนดโควต้าตามฉาก: Round 1 ให้ 2 นัด, Round 2 ให้ 4 นัด
-        string currentScene = SceneManager.GetActiveScene().name;
-        if (currentScene == "Round1") 
-        { 
-            maxAllowedShots = 2; 
-        }
-        else if (currentScene == "Round2") 
-        { 
-            maxAllowedShots = 4; 
-        }
-        else 
-        { 
-            maxAllowedShots = 6; 
-        }
-        
-        shotsFired = 0; 
-
-        if (GameData.instance != null)
-        {
-            currentAmmo = GameData.instance.currentAmmo;
-            maxAmmo = GameData.instance.maxAmmo;
-        }
-        else
-        {
-            currentAmmo = maxAmmo; 
-        }
-
-        UpdateAmmoUI();
-        
+        currentAmmo = maxAmmo;
         if (muzzleFlash != null) muzzleFlash.SetActive(false);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (nextStagePanel != null) nextStagePanel.SetActive(false);
         
+        targetEnemy = FindObjectOfType<EnemyHealth>();
+        if (playerHealth == null) playerHealth = FindObjectOfType<PlayerHealth>();
+        if (enemyAttack == null) enemyAttack = FindObjectOfType<EnemyAttack>();
+        
+        UpdateAmmoUI();
         Time.timeScale = 1f; 
+
+        StartCoroutine(RoundFlowRoutine());
     }
 
     void Update()
     {
-        // ถ้าหน้าต่างผลลัพธ์ (ชนะ/แพ้) เปิดอยู่ จะไม่ให้ยิงต่อ
         bool isUIVisible = (gameOverPanel != null && gameOverPanel.activeSelf) || 
                            (nextStagePanel != null && nextStagePanel.activeSelf);
-        
-        if (Input.GetButtonDown("Fire1") && Time.time >= nextFireTime && currentAmmo > 0 && !isUIVisible)
+
+        if (canShoot && !isUIVisible)
         {
-            Shoot(); 
-            nextFireTime = Time.time + fireRate; 
+            if (aimController != null) aimController.mouseSensitivity = normalSensitivity;
+
+            currentTimer -= Time.deltaTime;
+            
+            if (timerText != null) timerText.text = "TIME: " + currentTimer.ToString("F1");
+
+            if (Input.GetButtonDown("Fire1"))
+            {
+                if (currentAmmo > 0)
+                {
+                    Shoot(); 
+                }
+            }
+
+            if (currentTimer <= 0)
+            {
+                FailRound("หมดเวลา! โดนบอสสวนกลับ!");
+            }
         }
+    }
+
+    IEnumerator RoundFlowRoutine()
+    {
+        canShoot = false;
+
+        if (targetEnemy != null)
+        {
+            targetEnemy.RandomizeAndShowWeakPoint();
+            targetEnemy.ShowWeakPointVisual();
+        }
+
+        if (aimController != null) aimController.mouseSensitivity = slowSensitivity;
+
+        if (timerText != null) timerText.text = countdownMessage + ": 3";
+        yield return new WaitForSeconds(countdownSpeed);
+        
+        if (timerText != null) timerText.text = countdownMessage + ": 2";
+        yield return new WaitForSeconds(countdownSpeed);
+        
+        if (timerText != null) timerText.text = countdownMessage + ": 1";
+        yield return new WaitForSeconds(countdownSpeed);
+
+        if (timerText != null) timerText.text = "SHOOT!";
+        currentTimer = shootTimeLimit;
+        canShoot = true;
     }
 
     void Shoot()
     {
-        currentAmmo--;
-        shotsFired++; 
-
-        if (GameData.instance != null) GameData.instance.currentAmmo = currentAmmo;
-
-        UpdateAmmoUI(); 
+        currentAmmo--; 
+        UpdateAmmoUI();
+        canShoot = false; 
 
         if (muzzleFlash != null)
         {
@@ -105,74 +131,121 @@ public class PlayerShooting : MonoBehaviour
         Vector3 rayOrigin = fpsCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0.0f));
         RaycastHit hit;
         
-        bool enemyKilled = false;
-
         if (Physics.Raycast(rayOrigin, fpsCamera.transform.forward, out hit, weaponRange))
         {
-            EnemyHealth target = hit.transform.GetComponent<EnemyHealth>();
-            if (target != null)
+            EnemyHealth enemy = hit.transform.GetComponentInParent<EnemyHealth>();
+            if (enemy == null)
             {
-                target.TakeDamage(damage); 
+                enemy = hit.transform.GetComponent<EnemyHealth>();
+            }
+            
+            if (enemy != null)
+            {
+                bool isWeakPointHit = enemy.TryHitWeakPoint(hit.collider, damage, hit.point, hit.normal);
                 
-                // เช็คว่ายิงนัดนี้แล้วศัตรูตายเลยหรือไม่
-                if (target.currentHealth <= 0)
+                if (isWeakPointHit)
                 {
-                    enemyKilled = true;
+                    if (enemy.currentHealth <= 0)
+                    {
+                        Debug.Log("ชนะแล้ว!");
+                        if (nextStagePanel != null)
+                        {
+                            nextStagePanel.SetActive(true);
+                            Time.timeScale = 0f;
+                            UnlockCursor(); 
+                        }
+                    }
+                    else
+                    {
+                        StartCoroutine(NextRoundDelayRoutine());
+                    }
+                    return; 
                 }
             }
         }
 
-        // ถ้าศัตรูตาย ให้เด้ง UI ชนะขึ้นมาทันที
-        if (enemyKilled)
+        FailRound("ยิงพลาด! โดนบอสสวนกลับ!"); 
+    }
+
+    IEnumerator NextRoundDelayRoutine()
+    {
+        yield return new WaitForSeconds(1.5f);
+        StartCoroutine(RoundFlowRoutine());
+    }
+    
+    void FailRound(string reason)
+    {
+        canShoot = false;
+        Debug.Log(reason);
+        
+        // เริ่มต้นคิวการสวนกลับ (เลเซอร์มาก่อน แล้ว Panel แดง/เลือดลดตามหลัง)
+        StartCoroutine(CounterAttackSequenceRoutine());
+    }
+
+    IEnumerator CounterAttackSequenceRoutine()
+    {
+        // 1. สั่งให้บอสยิงเลเซอร์ออกมาก่อนตามเวลาที่ตั้งไว้
+        if (enemyAttack != null)
         {
-            Debug.Log("ศัตรูตายแล้ว! แสดง UI ทันที");
-            if (nextStagePanel != null)
+            enemyAttack.PlayLaserAttackCustom(laserShowDuration);
+            yield return new WaitForSeconds(laserShowDuration); 
+        }
+
+        if (delayBeforeDamage > 0)
+        {
+            yield return new WaitForSeconds(delayBeforeDamage);
+        }
+
+        // 2. หลังจากเลเซอร์หายไป ค่อยลดเลือดและให้ Panel สีแดงกระพริบขึ้นตามหลังรอบเดียว
+        if (playerHealth != null)
+        {
+            playerHealth.TakeDamage(1); 
+        }
+
+        // 3. ตรวจสอบสถานะเกมโอเวอร์
+        if (currentAmmo <= 0)
+        {
+            if (gameOverPanel != null)
             {
-                nextStagePanel.SetActive(true);
-                Time.timeScale = 0f; // หยุดเกมทันที
+                gameOverPanel.SetActive(true);
+                Time.timeScale = 0f;
+                UnlockCursor();
             }
         }
-        // ถ้าศัตรูยังไม่ตาย แต่ยิงจนครบโควต้าแล้ว ให้เด้ง Game Over
-        else if (shotsFired >= maxAllowedShots)
+        else
         {
-            Invoke("ShowGameOver", 0.3f); 
+            StartCoroutine(NextRoundDelayRoutine());
         }
     }
 
-    void ShowGameOver()
+    void UnlockCursor()
     {
-        Debug.Log("ยิงครบโควต้า " + maxAllowedShots + " นัดแล้วแต่จัดการไม่สำเร็จ!");
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(true);
-            Time.timeScale = 0f;
-        }
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     void HideMuzzleFlash()
     {
-        if (muzzleFlash != null)
-        {
-            muzzleFlash.SetActive(false);
-        }
+        if (muzzleFlash != null) muzzleFlash.SetActive(false);
     }
-
+    
     void UpdateAmmoUI()
     {
-        if (ammoText != null)
+        if (ammoIcons != null)
         {
-            ammoText.text = "BULLET: " + currentAmmo + " / " + maxAmmo;
-        }
-
-        for (int i = 0; i < bulletIcons.Length; i++)
-        {
-            if (i < currentAmmo)
+            for (int i = 0; i < ammoIcons.Length; i++)
             {
-                bulletIcons[i].SetActive(true);  
-            }
-            else
-            {
-                bulletIcons[i].SetActive(false); 
+                if (ammoIcons[i] != null)
+                {
+                    if (i < currentAmmo)
+                    {
+                        ammoIcons[i].SetActive(true);
+                    }
+                    else
+                    {
+                        ammoIcons[i].SetActive(false);
+                    }
+                }
             }
         }
     }

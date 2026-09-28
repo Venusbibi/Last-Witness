@@ -1,59 +1,152 @@
 using UnityEngine;
-using UnityEngine.UI; 
+using System.Collections;
 
 public class EnemyHealth : MonoBehaviour
 {
-    [Header("Health Settings")]
-    public int maxHealth = 2; 
-    public float currentHealth;
+    public int currentHealth = 2;
 
-    [Header("UI Settings (เชื่อมต่อหน้าจอ)")]
-    [Tooltip("ลาก UI ช่องเลือดบนหัวศัตรูมาใส่ตามลำดับ (ช่อง 1, ช่อง 2, ...)")]
-    public GameObject[] healthBlocks; // เปลี่ยนจาก Image เป็น GameObject Array
+    [Header("Weak Point System")]
+    public Collider[] possibleWeakPoints;
+    private Collider currentWeakPoint;
+
+    [Header("Enemy Health UI Blocks (ไอคอนเลือดศัตรู)")]
+    [Tooltip("ลาก GameObject รูปเลือดศัตรูมาใส่ที่นี่ตามลำดับ (เช่น HP1, HP2)")]
+    public GameObject[] enemyHealthBlocks;
+
+    [Header("2D Hit Flash Effect (กระพริบขาวเมื่อโดนยิง)")]
+    public SpriteRenderer enemySpriteRenderer;
+    public Sprite whiteFlashSprite;
+    public float flashDuration = 0.15f;
+    private Sprite originalSprite;
+
+    [Header("Visual Effects (ระบบรูปภาพบอกจุดอ่อน 2D)")]
+    public Sprite weakPointSprite;
+    public float iconScale = 0.5f;
+
+    private GameObject spawnedIconObject; 
+
+    public GameObject bloodEffectPrefab;
+    public GameObject sparkEffectPrefab;
 
     void Start()
     {
-        currentHealth = maxHealth;
-        UpdateHealthUI(); 
-    }
+        currentHealth = 2;
 
-    public void TakeDamage(int damage)
-    {
-        currentHealth -= damage;
-        Debug.Log("ศัตรูโดนยิง! เลือดเหลือ: " + currentHealth);
-
-        UpdateHealthUI(); 
-
-        if (currentHealth <= 0)
+        if (enemySpriteRenderer != null)
         {
-            Die();
+            originalSprite = enemySpriteRenderer.sprite;
         }
+
+        UpdateEnemyHealthUI();
+        RandomizeAndShowWeakPoint();
     }
 
-    void UpdateHealthUI()
+    public void RandomizeAndShowWeakPoint()
     {
-        // วนลูปเพื่อเช็คช่องเลือดแต่ละช่อง
-        for (int i = 0; i < healthBlocks.Length; i++)
+        if (possibleWeakPoints != null && possibleWeakPoints.Length > 0)
         {
-            if (healthBlocks[i] != null)
+            if (spawnedIconObject != null)
             {
-                // ถ้าเลขช่อง (i) น้อยกว่าเลือดที่เหลืออยู่ (currentHealth) -> เปิดให้เห็นช่องเลือด (SetActive = true)
-                // ถ้าเลขช่อง (i) มากกว่าหรือเท่ากับเลือดที่เหลือ -> ปิดช่องเลือด (SetActive = false)
-                healthBlocks[i].SetActive(i < currentHealth);
+                Destroy(spawnedIconObject);
+            }
+
+            int randomIndex = Random.Range(0, possibleWeakPoints.Length);
+            currentWeakPoint = possibleWeakPoints[randomIndex];
+            
+            if (weakPointSprite != null && currentWeakPoint != null)
+            {
+                spawnedIconObject = new GameObject("WeakPoint_Icon");
+                spawnedIconObject.transform.SetParent(transform);
+
+                Vector3 spawnPos = currentWeakPoint.bounds.center + new Vector3(0, 0.8f, 0);
+                spawnedIconObject.transform.position = spawnPos;
+                spawnedIconObject.transform.localScale = new Vector3(iconScale, iconScale, 1f);
+
+                SpriteRenderer sr = spawnedIconObject.AddComponent<SpriteRenderer>();
+                sr.sprite = weakPointSprite;
+                
+                sr.sortingLayerName = enemySpriteRenderer.sortingLayerName;
+                sr.sortingOrder = enemySpriteRenderer.sortingOrder + 10;
             }
         }
     }
 
-    void Die()
+    public void ShowWeakPointVisual()
     {
-        Debug.Log("ศัตรูตายแล้ว!");
-        
-        // เรียกฟังก์ชันชัยชนะ (Victory) จาก GameManager ที่เราทำไว้
-        if (GameManager.instance != null) 
+        if (spawnedIconObject != null)
         {
-            GameManager.instance.Victory(); 
+            spawnedIconObject.SetActive(true);
         }
-        
-        Destroy(gameObject); 
+    }
+
+    public void HideWeakPointVisual()
+    {
+        if (spawnedIconObject != null)
+        {
+            spawnedIconObject.SetActive(false);
+        }
+    }
+
+    public bool TryHitWeakPoint(Collider hitCollider, int damage, Vector3 hitPoint, Vector3 hitNormal)
+    {
+        if (hitCollider == currentWeakPoint || (currentWeakPoint != null && hitCollider.transform.IsChildOf(currentWeakPoint.transform)))
+        {
+            currentHealth -= damage;
+            UpdateEnemyHealthUI(); // อัปเดต UI เลือดทันทีที่เลือดลด
+            Debug.Log("ยิงโดนจุดอ่อน! เลือดศัตรูเหลือ: " + currentHealth);
+
+            if (enemySpriteRenderer != null && whiteFlashSprite != null)
+            {
+                StartCoroutine(FlashWhiteRoutine());
+            }
+            
+            if (bloodEffectPrefab != null) Instantiate(bloodEffectPrefab, hitPoint, Quaternion.identity);
+
+            if (currentHealth > 0)
+            {
+                RandomizeAndShowWeakPoint();
+            }
+            else
+            {
+                if (spawnedIconObject != null) Destroy(spawnedIconObject);
+                Debug.Log("ศัตรูตายแล้ว!");
+            }
+            return true;
+        }
+        else
+        {
+            if (sparkEffectPrefab != null) Instantiate(sparkEffectPrefab, hitPoint, Quaternion.identity);
+            Debug.Log("ยิงโดนตัว แต่ไม่ใช่จุดอ่อน!");
+            return false;
+        }
+    }
+
+    // ฟังก์ชันเปิด/ปิดไอคอนรูปเลือดตามจำนวนเลือดที่เหลือ
+    void UpdateEnemyHealthUI()
+    {
+        if (enemyHealthBlocks != null)
+        {
+            for (int i = 0; i < enemyHealthBlocks.Length; i++)
+            {
+                if (enemyHealthBlocks[i] != null)
+                {
+                    if (i < currentHealth)
+                    {
+                        enemyHealthBlocks[i].SetActive(true);
+                    }
+                    else
+                    {
+                        enemyHealthBlocks[i].SetActive(false);
+                    }
+                }
+            }
+        }
+    }
+
+    IEnumerator FlashWhiteRoutine()
+    {
+        enemySpriteRenderer.sprite = whiteFlashSprite;
+        yield return new WaitForSeconds(flashDuration);
+        enemySpriteRenderer.sprite = originalSprite;
     }
 }

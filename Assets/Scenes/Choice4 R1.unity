@@ -437,7 +437,7 @@ RectTransform:
   m_GameObject: {fileID: 801069544}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 19.16255, y: 10.897701, z: 20.436}
+  m_LocalScale: {x: 19.403997, y: 10.897701, z: 20.436}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1403399280}
@@ -888,7 +888,7 @@ Canvas:
   m_Enabled: 1
   serializedVersion: 3
   m_RenderMode: 1
-  m_Camera: {fileID: 0}
+  m_Camera: {fileID: 1054610658}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1

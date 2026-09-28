@@ -1,123 +1,60 @@
-using System.Collections;
 using UnityEngine;
+using System.Collections;
 
 public class EnemyAttack : MonoBehaviour
 {
-    [Header("Attack Settings")]
-    public int damage = 1; 
-    public float timeBetweenAttacks = 4f; 
-    public float chargeTime = 1.5f;       
+    [Header("Visuals")]
+    public Color shootColor = Color.red;
 
-    [Header("UI & Visuals")]
-    public GameObject warningIndicator; 
-    public LineRenderer laserLine;
-    
-    [Tooltip("สีของเลเซอร์ตอนกำลังเล็ง")]
-    public Color aimColor = new Color(1f, 0f, 0f, 0.3f); // แดงใสๆ
-    [Tooltip("สีของเลเซอร์ตอนยิงจริง")]
-    public Color shootColor = new Color(1f, 0f, 0f, 1f); // แดงเข้มทึบ
-    [Tooltip("ระยะเวลาที่เลเซอร์จะโชว์ค้างตอนยิงจริง")]
-    public float laserDuration = 0.2f;
-
-    private float timer;
-    private bool isCharging = false;
-    private Transform playerCamera;
-    private PlayerHealth playerHealth;
-    private PlayerMovement2D playerMovement;
-
-    void Start()
+    public void PlayLaserAttackCustom(float duration)
     {
-        timer = timeBetweenAttacks;
-        playerHealth = FindObjectOfType<PlayerHealth>();
-        playerMovement = FindObjectOfType<PlayerMovement2D>();
-        
-        if (Camera.main != null) playerCamera = Camera.main.transform;
-
-        if (warningIndicator != null) warningIndicator.SetActive(false);
-        if (laserLine != null) laserLine.enabled = false;
+        StartCoroutine(ShowDynamicLaserRoutine(duration));
     }
 
-    void Update()
+    IEnumerator ShowDynamicLaserRoutine(float duration)
     {
-        timer -= Time.deltaTime;
+        // ค้นหาตำแหน่งผู้เล่นในฉาก ( Player )
+        GameObject playerObj = GameObject.FindWithTag("Player");
+        Vector3 targetPos;
 
-        // ช่วงชาร์จ: แสดงลูกศรเตือน + เปิดเลเซอร์เล็งเป้าค้างไว้
-        if (timer <= chargeTime && timer > 0f)
+        if (playerObj != null)
         {
-            if (!isCharging)
-            {
-                isCharging = true;
-                if (warningIndicator != null) warningIndicator.SetActive(true);
-            }
-            // อัปเดตตำแหน่งเลเซอร์เล็งตลอดเวลา (ให้เส้นหยุดแค่ตรงที่มันชน)
-            DrawLaser(aimColor); 
+            // ให้เลเซอร์พุ่งไปที่ตัวผู้เล่น (ระดับอก/ลำตัว) จะได้ไม่บังกลางจอ
+            targetPos = playerObj.transform.position + new Vector3(0, 1.0f, 0);
         }
-
-        // ช่วงยิงจริง
-        if (timer <= 0f)
+        else if (Camera.main != null)
         {
-            ExecuteAttack();
-            
-            timer = timeBetweenAttacks;
-            isCharging = false;
-            if (warningIndicator != null) warningIndicator.SetActive(false);
-        }
-    }
-
-    // ฟังก์ชันวาดเส้นเลเซอร์ (ใช้ได้ทั้งตอนเล็งและตอนยิง)
-    void DrawLaser(Color color)
-    {
-        if (laserLine == null || playerCamera == null) return;
-
-        laserLine.enabled = true;
-        laserLine.startColor = color;
-        laserLine.endColor = color;
-
-        Vector3 startPos = transform.position;
-        // ชี้ไปทางผู้เล่น (ปรับความสูงเป้าหมายลงมานิดหน่อย)
-        Vector3 direction = (playerCamera.position - new Vector3(0, 0.5f, 0)) - startPos;
-        
-        laserLine.SetPosition(0, startPos);
-
-        RaycastHit hit;
-        // ศัตรูยิง Raycast ออกไปเช็คว่าชนอะไรก่อน
-        if (Physics.Raycast(startPos, direction.normalized, out hit, 100f))
-        {
-            // ถ้าชน ให้เลเซอร์หยุดที่จุดนั้น (เช่น ถ้าผู้เล่นแอบ เลเซอร์จะหยุดที่กล่อง)
-            laserLine.SetPosition(1, hit.point);
+            // เผื่อหา Player ไม่เจอ ให้พุ่งไปที่หน้ากล้องแต่มองต่ำลงมา
+            targetPos = Camera.main.transform.position - new Vector3(0, 0.5f, 0);
         }
         else
         {
-            // ถ้าไม่ชนอะไรเลย ก็ให้เส้นยืดไปไกลๆ
-            laserLine.SetPosition(1, startPos + direction.normalized * 100f);
+            yield break;
         }
-    }
 
-    void ExecuteAttack()
-    {
-        // ตอนยิงจริง ให้วาดเลเซอร์สีเข้มทับ
-        DrawLaser(shootColor);
-        StartCoroutine(ShootLaserEffect());
+        // สร้างเส้นเลเซอร์ชั่วคราว
+        GameObject tempLaserObj = new GameObject("Active_Dynamic_Laser");
+        LineRenderer lr = tempLaserObj.AddComponent<LineRenderer>();
 
-        // คำนวณดาเมจ
-        if (playerMovement != null && playerMovement.isCovering)
-        {
-            Debug.Log("รอดตัว! ศัตรูยิงโดนกล่องกำบัง");
-        }
-        else
-        {
-            if (playerHealth != null)
-            {
-                Debug.Log("โดนยิงเต็มๆ!");
-                playerHealth.TakeDamage(damage);
-            }
-        }
-    }
-    
-    // หน่วงเวลาปิดเลเซอร์ตอนยิงเสร็จ
-    IEnumerator ShootLaserEffect()
-    {
-        yield return new WaitForSeconds(laserDuration);
-        laserLine.enabled = false;
+        lr.sharedMaterial = new Material(Shader.Find("Sprites/Default"));
+        lr.startWidth = 0.2f;
+        lr.endWidth = 0.2f;
+        lr.startColor = shootColor;
+        lr.endColor = shootColor;
+
+        lr.positionCount = 2;
+
+        // จุดที่ 0: ตำแหน่งเริ่มต้นที่ตัวบอส (ปรับความสูงได้ตรง Vector3(0, 0.2f, 0))
+        Vector3 bossPos = transform.position + new Vector3(0, 0.5f, 0);
+        lr.SetPosition(0, bossPos);
+
+        // จุดที่ 1: พุ่งไปที่ตัวผู้เล่นในฉาก (ไม่พุ่งเข้าหน้ากล้องตรงกลาง)
+        lr.SetPosition(1, targetPos);
+
+        // รอเวลาแสดงผลตามที่ตั้งไว้
+        yield return new WaitForSeconds(duration);
+
+        // ลบเลเซอร์ทิ้งเมื่อหมดเวลา
+        Destroy(tempLaserObj);
     }
 }
