@@ -3,12 +3,17 @@ using UnityEngine;
 public class MouseAimController : MonoBehaviour
 {
     [Header("ตั้งค่าความเร็วเมาส์")]
-    public float mouseSensitivity = 150f;
+    public float mouseSensitivity = 30f;
 
-    [Header("ระยะขอบเขตการหันเป้า (กรอบการเล็ง)")]
-    public float maxLookUpAndDown = 15f; 
-    public float maxLookLeftAndRight = 20f; 
+    [Header("ความหน่วงของปืนและกล้อง (Inertia)")]
+    public float aimSmoothSpeed = 20f;
 
+    [Header("ระยะขอบเขตการหัน")]
+    public float maxLookUpAndDown = 30f; 
+    public float maxLookLeftAndRight = 10f; 
+
+    private float targetX = 0f;
+    private float targetY = 0f;
     private float currentX = 0f;
     private float currentY = 0f;
     
@@ -16,7 +21,6 @@ public class MouseAimController : MonoBehaviour
 
     void Start()
     {
-        LockCursor();
         startRotation = transform.localRotation;
     }
 
@@ -24,26 +28,18 @@ public class MouseAimController : MonoBehaviour
     {
         if (Time.timeScale == 0f) return;
 
-        if (Cursor.lockState != CursorLockMode.Locked)
-        {
-            LockCursor();
-        }
-
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
-        currentY += mouseX;
-        currentX -= mouseY; 
+        targetY += mouseX;
+        targetX -= mouseY; 
 
-        currentX = Mathf.Clamp(currentX, -maxLookUpAndDown, maxLookUpAndDown);
-        currentY = Mathf.Clamp(currentY, -maxLookLeftAndRight, maxLookLeftAndRight);
+        targetX = Mathf.Clamp(targetX, -maxLookUpAndDown, maxLookUpAndDown);
+        targetY = Mathf.Clamp(targetY, -maxLookLeftAndRight, maxLookLeftAndRight);
+
+        currentX = Mathf.Lerp(currentX, targetX, aimSmoothSpeed * Time.deltaTime);
+        currentY = Mathf.Lerp(currentY, targetY, aimSmoothSpeed * Time.deltaTime);
 
         transform.localRotation = startRotation * Quaternion.Euler(currentX, currentY, 0f);
-    }
-
-    void LockCursor()
-    {
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
     }
 }

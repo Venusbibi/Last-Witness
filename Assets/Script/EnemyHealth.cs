@@ -3,7 +3,10 @@ using System.Collections;
 
 public class EnemyHealth : MonoBehaviour
 {
-    public int currentHealth = 2;
+    [Header("Health Settings")]
+    public int maxHealth = 4;        // กำหนดเลือดสูงสุดของศัตรูตัวนี้จากข้างนอก Inspector ได้
+    [HideInInspector]
+    public int currentHealth;
 
     [Header("Weak Point System")]
     public Collider[] possibleWeakPoints;
@@ -30,7 +33,8 @@ public class EnemyHealth : MonoBehaviour
 
     void Start()
     {
-        currentHealth = 2;
+        // กำหนดให้เลือดปัจจุบันเริ่มต้นเท่ากับ Max Health ที่ตั้งไว้จาก Inspector
+        currentHealth = maxHealth;
 
         if (enemySpriteRenderer != null)
         {
@@ -58,7 +62,7 @@ public class EnemyHealth : MonoBehaviour
                 spawnedIconObject = new GameObject("WeakPoint_Icon");
                 spawnedIconObject.transform.SetParent(transform);
 
-                Vector3 spawnPos = currentWeakPoint.bounds.center + new Vector3(0, 0.8f, 0);
+                Vector3 spawnPos = currentWeakPoint.bounds.center;
                 spawnedIconObject.transform.position = spawnPos;
                 spawnedIconObject.transform.localScale = new Vector3(iconScale, iconScale, 1f);
 
@@ -149,4 +153,4 @@ public class EnemyHealth : MonoBehaviour
         yield return new WaitForSeconds(flashDuration);
         enemySpriteRenderer.sprite = originalSprite;
     }
-}
+} 

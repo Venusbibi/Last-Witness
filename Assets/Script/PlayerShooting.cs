@@ -10,8 +10,8 @@ public class PlayerShooting : MonoBehaviour
     public GameObject[] ammoIcons; 
 
     [Header("Gun Settings")]
-    public float weaponRange = 50f; 
-    public int damage = 1; 
+    public float weaponRange = 100f; 
+    public int damage = 1;
     public Camera fpsCamera;        
     public GameObject muzzleFlash;
     
@@ -29,13 +29,9 @@ public class PlayerShooting : MonoBehaviour
     private bool canShoot = false; 
     
     [Header("Systems")]
-    public MouseAimController aimController; 
     public PlayerHealth playerHealth; 
     public EnemyAttack enemyAttack; 
     
-    public float normalSensitivity = 50f; 
-    public float slowSensitivity = 3f; 
-
     [Header("Attack Timing Settings (ตั้งเวลาสวนกลับของบอส)")]
     [Tooltip("ระยะเวลาที่เลเซอร์แสดงผลก่อนจะหายไป")]
     public float laserShowDuration = 0.4f; 
@@ -51,7 +47,17 @@ public class PlayerShooting : MonoBehaviour
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (nextStagePanel != null) nextStagePanel.SetActive(false);
         
-        targetEnemy = FindObjectOfType<EnemyHealth>();
+        // ค้นหา EnemyHealth ตัวที่เปิดใช้งานอยู่จริงในซีนปัจจุบัน
+        EnemyHealth[] enemies = FindObjectsOfType<EnemyHealth>();
+        foreach (var enemy in enemies)
+        {
+            if (enemy.gameObject.activeInHierarchy)
+            {
+                targetEnemy = enemy;
+                break;
+            }
+        }
+
         if (playerHealth == null) playerHealth = FindObjectOfType<PlayerHealth>();
         if (enemyAttack == null) enemyAttack = FindObjectOfType<EnemyAttack>();
         
@@ -68,13 +74,11 @@ public class PlayerShooting : MonoBehaviour
 
         if (canShoot && !isUIVisible)
         {
-            if (aimController != null) aimController.mouseSensitivity = normalSensitivity;
-
             currentTimer -= Time.deltaTime;
             
             if (timerText != null) timerText.text = "TIME: " + currentTimer.ToString("F1");
 
-            if (Input.GetButtonDown("Fire1"))
+            if (Input.GetButtonDown("Fire1") || Input.GetMouseButtonDown(0))
             {
                 if (currentAmmo > 0)
                 {
@@ -98,8 +102,6 @@ public class PlayerShooting : MonoBehaviour
             targetEnemy.RandomizeAndShowWeakPoint();
             targetEnemy.ShowWeakPointVisual();
         }
-
-        if (aimController != null) aimController.mouseSensitivity = slowSensitivity;
 
         if (timerText != null) timerText.text = countdownMessage + ": 3";
         yield return new WaitForSeconds(countdownSpeed);
@@ -128,10 +130,23 @@ public class PlayerShooting : MonoBehaviour
             Invoke("HideMuzzleFlash", 0.20f); 
         }
 
-        Vector3 rayOrigin = fpsCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0.0f));
-        RaycastHit hit;
+        // ใช้อิงจากตำแหน่งของเป้า Crosshair หน่วง (LaggyReticleUI) โดยตรง
+        Ray ray;
+        LaggyReticleUI reticle = FindObjectOfType<LaggyReticleUI>();
         
-        if (Physics.Raycast(rayOrigin, fpsCamera.transform.forward, out hit, weaponRange))
+        if (reticle != null && fpsCamera != null)
+        {
+            // ใช้พิกัดของตัวเป้า Crosshair UI ยิง Raycast ออกไปตรงๆ
+            ray = fpsCamera.ScreenPointToRay(reticle.transform.position);
+        }
+        else
+        {
+            // ถ้าหาเป้าไม่เจอ สำรองใช้จุดกึ่งกลางจอ
+            ray = fpsCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0.0f));
+        }
+
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, weaponRange))
         {
             EnemyHealth enemy = hit.transform.GetComponentInParent<EnemyHealth>();
             if (enemy == null)
@@ -177,14 +192,11 @@ public class PlayerShooting : MonoBehaviour
     {
         canShoot = false;
         Debug.Log(reason);
-        
-        // เริ่มต้นคิวการสวนกลับ (เลเซอร์มาก่อน แล้ว Panel แดง/เลือดลดตามหลัง)
         StartCoroutine(CounterAttackSequenceRoutine());
     }
 
     IEnumerator CounterAttackSequenceRoutine()
     {
-        // 1. สั่งให้บอสยิงเลเซอร์ออกมาก่อนตามเวลาที่ตั้งไว้
         if (enemyAttack != null)
         {
             enemyAttack.PlayLaserAttackCustom(laserShowDuration);
@@ -196,13 +208,11 @@ public class PlayerShooting : MonoBehaviour
             yield return new WaitForSeconds(delayBeforeDamage);
         }
 
-        // 2. หลังจากเลเซอร์หายไป ค่อยลดเลือดและให้ Panel สีแดงกระพริบขึ้นตามหลังรอบเดียว
         if (playerHealth != null)
         {
             playerHealth.TakeDamage(1); 
         }
 
-        // 3. ตรวจสอบสถานะเกมโอเวอร์
         if (currentAmmo <= 0)
         {
             if (gameOverPanel != null)
