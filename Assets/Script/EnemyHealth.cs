@@ -31,6 +31,10 @@ public class EnemyHealth : MonoBehaviour
     public GameObject bloodEffectPrefab;
     public GameObject sparkEffectPrefab;
 
+    [Header("Audio Settings (เสียงเอฟเฟกต์)")]
+    public AudioSource audioSource;         // ช่องใส่ Audio Source ของตัวบอส
+    public AudioClip weakPointHitSound;     // ช่องใส่ไฟล์เสียงยิงโดนจุดอ่อน
+
     void Start()
     {
         // กำหนดให้เลือดปัจจุบันเริ่มต้นเท่ากับ Max Health ที่ตั้งไว้จาก Inspector
@@ -93,10 +97,21 @@ public class EnemyHealth : MonoBehaviour
 
     public bool TryHitWeakPoint(Collider hitCollider, int damage, Vector3 hitPoint, Vector3 hitNormal)
     {
+        Debug.Log("ยิงโดน Collider: " + (hitCollider != null ? hitCollider.name : "ไม่มี") + 
+                  " | จุดอ่อนปัจจุบัน: " + (currentWeakPoint != null ? currentWeakPoint.name : "ไม่มี"));
+
+        // ตรวจสอบว่า Collider ที่ยิงโดนตรงกับจุดอ่อนปัจจุบันหรือไม่
         if (hitCollider == currentWeakPoint || (currentWeakPoint != null && hitCollider.transform.IsChildOf(currentWeakPoint.transform)))
         {
+            // --- โค้ดที่เพิ่มใหม่: เล่นเสียงโดนจุดอ่อน ---
+            if (audioSource != null && weakPointHitSound != null)
+            {
+                audioSource.PlayOneShot(weakPointHitSound);
+            }
+            // ------------------------------------
+
             currentHealth -= damage;
-            UpdateEnemyHealthUI(); // อัปเดต UI เลือดทันทีที่เลือดลด
+            UpdateEnemyHealthUI(); 
             Debug.Log("ยิงโดนจุดอ่อน! เลือดศัตรูเหลือ: " + currentHealth);
 
             if (enemySpriteRenderer != null && whiteFlashSprite != null)
@@ -124,7 +139,6 @@ public class EnemyHealth : MonoBehaviour
             return false;
         }
     }
-
     // ฟังก์ชันเปิด/ปิดไอคอนรูปเลือดตามจำนวนเลือดที่เหลือ
     void UpdateEnemyHealthUI()
     {

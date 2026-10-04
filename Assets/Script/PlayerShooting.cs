@@ -32,13 +32,26 @@ public class PlayerShooting : MonoBehaviour
     public PlayerHealth playerHealth; 
     public EnemyAttack enemyAttack; 
     
-    [Header("Attack Timing Settings (ตั้งเวลาสวนกลับของบอส)")]
-    [Tooltip("ระยะเวลาที่เลเซอร์แสดงผลก่อนจะหายไป")]
+    [Header("Attack Timing Settings")]
     public float laserShowDuration = 0.4f; 
-    [Tooltip("ระยะเวลาก่อนที่ Panel สีแดงจะขึ้นหลังจากเลเซอร์หาย")]
     public float delayBeforeDamage = 0.0f; 
     
     private EnemyHealth targetEnemy;
+
+    // -----------------------------------------------------
+    // รวบรวมระบบเสียงทั้งหมดไว้ตรงนี้
+    [Header("All Audio Settings")]
+    public AudioSource gunAudioSource;      // ลำโพงสำหรับเสียงปืน
+    public AudioClip gunshotSound;          // ไฟล์เสียงปืน
+    
+    public AudioSource sfxAudioSource;      // ลำโพงสำหรับเสียงเอฟเฟกต์อื่นๆ
+    public AudioClip tickSound;             // ไฟล์เสียงนาฬิกาเดิน (Tick-Tock) หรือเสียงบี๊บ
+    public AudioClip failWarningSound;      // ไฟล์เสียงเตือนตอนพลาด
+    public AudioClip laserAttackSound;      // ไฟล์เสียงบอสยิงเลเซอร์
+    public AudioClip playerHurtSound;       // ไฟล์เสียงตอนตัวละครโดนโจมตี
+
+    private int lastTickSecond = -1;        // ตัวแปรเช็คเวลาเพื่อเล่นเสียง Tick-Tock
+    // -----------------------------------------------------
 
     void Start()
     {
@@ -47,7 +60,6 @@ public class PlayerShooting : MonoBehaviour
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (nextStagePanel != null) nextStagePanel.SetActive(false);
         
-        // ค้นหา EnemyHealth ตัวที่เปิดใช้งานอยู่จริงในซีนปัจจุบัน
         EnemyHealth[] enemies = FindObjectsOfType<EnemyHealth>();
         foreach (var enemy in enemies)
         {
@@ -78,6 +90,14 @@ public class PlayerShooting : MonoBehaviour
             
             if (timerText != null) timerText.text = "TIME: " + currentTimer.ToString("F1");
 
+            // ระบบเสียง Tick-Tock ช่วงนับถอยหลังใกล้หมดเวลา
+            int currentSecond = Mathf.CeilToInt(currentTimer);
+            if (currentSecond != lastTickSecond && currentSecond > 0 && currentSecond <= 3)
+            {
+                PlaySFX(tickSound);
+                lastTickSecond = currentSecond;
+            }
+
             if (Input.GetButtonDown("Fire1") || Input.GetMouseButtonDown(0))
             {
                 if (currentAmmo > 0)
@@ -96,6 +116,7 @@ public class PlayerShooting : MonoBehaviour
     IEnumerator RoundFlowRoutine()
     {
         canShoot = false;
+        lastTickSecond = -1; 
 
         if (targetEnemy != null)
         {
@@ -103,13 +124,17 @@ public class PlayerShooting : MonoBehaviour
             targetEnemy.ShowWeakPointVisual();
         }
 
+        // เล่นเสียง Tick-Tock ช่วงเตรียมตัว 3.. 2.. 1..
         if (timerText != null) timerText.text = countdownMessage + ": 3";
+        PlaySFX(tickSound);
         yield return new WaitForSeconds(countdownSpeed);
         
         if (timerText != null) timerText.text = countdownMessage + ": 2";
+        PlaySFX(tickSound);
         yield return new WaitForSeconds(countdownSpeed);
         
         if (timerText != null) timerText.text = countdownMessage + ": 1";
+        PlaySFX(tickSound);
         yield return new WaitForSeconds(countdownSpeed);
 
         if (timerText != null) timerText.text = "SHOOT!";
@@ -123,6 +148,12 @@ public class PlayerShooting : MonoBehaviour
         UpdateAmmoUI();
         canShoot = false; 
 
+        // เล่นเสียงปืน
+        if (gunAudioSource != null && gunshotSound != null)
+        {
+            gunAudioSource.PlayOneShot(gunshotSound);
+        }
+
         if (muzzleFlash != null)
         {
             muzzleFlash.SetActive(true); 
@@ -130,18 +161,15 @@ public class PlayerShooting : MonoBehaviour
             Invoke("HideMuzzleFlash", 0.20f); 
         }
 
-        // ใช้อิงจากตำแหน่งของเป้า Crosshair หน่วง (LaggyReticleUI) โดยตรง
         Ray ray;
         LaggyReticleUI reticle = FindObjectOfType<LaggyReticleUI>();
         
         if (reticle != null && fpsCamera != null)
         {
-            // ใช้พิกัดของตัวเป้า Crosshair UI ยิง Raycast ออกไปตรงๆ
             ray = fpsCamera.ScreenPointToRay(reticle.transform.position);
         }
         else
         {
-            // ถ้าหาเป้าไม่เจอ สำรองใช้จุดกึ่งกลางจอ
             ray = fpsCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0.0f));
         }
 
@@ -149,10 +177,7 @@ public class PlayerShooting : MonoBehaviour
         if (Physics.Raycast(ray, out hit, weaponRange))
         {
             EnemyHealth enemy = hit.transform.GetComponentInParent<EnemyHealth>();
-            if (enemy == null)
-            {
-                enemy = hit.transform.GetComponent<EnemyHealth>();
-            }
+            if (enemy == null) enemy = hit.transform.GetComponent<EnemyHealth>();
             
             if (enemy != null)
             {
@@ -192,6 +217,7 @@ public class PlayerShooting : MonoBehaviour
     {
         canShoot = false;
         Debug.Log(reason);
+        PlaySFX(failWarningSound); // เล่นเสียงเตือนว่าพลาด
         StartCoroutine(CounterAttackSequenceRoutine());
     }
 
@@ -199,6 +225,7 @@ public class PlayerShooting : MonoBehaviour
     {
         if (enemyAttack != null)
         {
+            PlaySFX(laserAttackSound); // เล่นเสียงเลเซอร์
             enemyAttack.PlayLaserAttackCustom(laserShowDuration);
             yield return new WaitForSeconds(laserShowDuration); 
         }
@@ -210,6 +237,7 @@ public class PlayerShooting : MonoBehaviour
 
         if (playerHealth != null)
         {
+            PlaySFX(playerHurtSound); // เล่นเสียงเสียเลือด
             playerHealth.TakeDamage(1); 
         }
 
@@ -225,6 +253,15 @@ public class PlayerShooting : MonoBehaviour
         else
         {
             StartCoroutine(NextRoundDelayRoutine());
+        }
+    }
+
+    // ฟังก์ชันตัวช่วยสำหรับเล่นเสียง SFX ง่ายๆ
+    void PlaySFX(AudioClip clip)
+    {
+        if (sfxAudioSource != null && clip != null)
+        {
+            sfxAudioSource.PlayOneShot(clip);
         }
     }
 
@@ -247,14 +284,7 @@ public class PlayerShooting : MonoBehaviour
             {
                 if (ammoIcons[i] != null)
                 {
-                    if (i < currentAmmo)
-                    {
-                        ammoIcons[i].SetActive(true);
-                    }
-                    else
-                    {
-                        ammoIcons[i].SetActive(false);
-                    }
+                    ammoIcons[i].SetActive(i < currentAmmo);
                 }
             }
         }

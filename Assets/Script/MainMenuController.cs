@@ -3,8 +3,23 @@ using UnityEngine.SceneManagement;
 
 public class MainMenuController : MonoBehaviour
 {
+    public string gameSceneName = "Main Menu";
+
     // สร้างช่องสำหรับลาก Panel Options มาใส่
     public GameObject optionsPanel; 
+
+    [Header("ระบบเสียงกดปุ่ม")]
+    public AudioSource audioSource;     // ลาก Audio Source มาใส่
+    public AudioClip clickSound;        // ลากไฟล์เสียงคลิกมาใส่
+
+    // ฟังก์ชันเล่นเสียงกลาง
+    private void PlayClickSound()
+    {
+        if (audioSource != null && clickSound != null)
+        {
+            audioSource.PlayOneShot(clickSound);
+        }
+    }
 
     public void PlayGame()
     {
