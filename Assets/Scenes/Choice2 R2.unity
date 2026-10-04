@@ -285,14 +285,14 @@ RectTransform:
   m_GameObject: {fileID: 230275827}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 6.1934214, y: 6.381471, z: 2.034}
+  m_LocalScale: {x: 9.448051, y: 8.766251, z: 2.7941132}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1403399280}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -704, y: -217}
+  m_AnchoredPosition: {x: -684, y: -130}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &230275829
@@ -315,7 +315,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 23b9866e3280465449ba0232d55d8fc3, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 86e3f5e1e8ee43648b9076e5e5fa2736, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -913,7 +913,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Dialogue
   nameTextComponent: {fileID: 1258240707}
   textComponent: {fileID: 1904657092}
-  buttonToShowAfterDialogue: {fileID: 712910491}
+  actionAfterDialogue: 1
+  objectToShow: {fileID: 0}
+  sceneToLoad: Round3 1
   lines:
   - characterName: 'Player:'
     sentence: "\u201CI ain\u2019t lookin\u2019 to kill you.\u201D"

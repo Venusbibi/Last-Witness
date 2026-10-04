@@ -1,15 +1,28 @@
 using System.Collections;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement; // เพิ่มคำสั่งสำหรับการจัดการ Scene
 
 public class Dialogue : MonoBehaviour
 {
     public TextMeshProUGUI nameTextComponent; 
     public TextMeshProUGUI textComponent;     
     
-    // --- โค้ดที่เพิ่มใหม่: ช่องสำหรับใส่ปุ่มที่อยากให้โผล่มาตอนคุยจบ ---
-    [Header("ปุ่มที่จะให้โผล่มาตอนคุยจบ")]
-    public GameObject buttonToShowAfterDialogue; 
+    // --- สร้างตัวเลือก Dropdown สำหรับเหตุการณ์ตอนคุยจบ ---
+    public enum EndActionType
+    {
+        ShowCanvas,
+        ChangeScene
+    }
+
+    [Header("เหตุการณ์เมื่อคุยจบ")]
+    public EndActionType actionAfterDialogue;
+
+    [Tooltip("ถ้าเลือก Show Canvas: ลาก Canvas หรือปุ่มมาใส่ที่นี่")]
+    public GameObject objectToShow;
+
+    [Tooltip("ถ้าเลือก Change Scene: พิมพ์ชื่อ Scene ที่ต้องการเปลี่ยน (อย่าลืมแอด Scene ลง Build Settings)")]
+    public string sceneToLoad;
     // ---------------------------------------------------
 
     [System.Serializable]
@@ -30,10 +43,10 @@ public class Dialogue : MonoBehaviour
         if(nameTextComponent != null) 
             nameTextComponent.text = string.Empty;
             
-        // ตอนเริ่มเกม ให้บังคับซ่อนปุ่มไว้ก่อนอัตโนมัติ
-        if(buttonToShowAfterDialogue != null)
+        // ตอนเริ่มเกม ให้บังคับซ่อน UI ไว้ก่อนอัตโนมัติ (เฉพาะกรณีที่เลือกแบบ Show Canvas)
+        if(actionAfterDialogue == EndActionType.ShowCanvas && objectToShow != null)
         {
-            buttonToShowAfterDialogue.SetActive(false);
+            objectToShow.SetActive(false);
         }
 
         StartDialogue();
@@ -86,13 +99,28 @@ public class Dialogue : MonoBehaviour
         }
         else
         {
-            // --- โค้ดที่แก้ไขใหม่: เมื่อคุยจบหน้าสุดท้าย ---
-            // 1. เปิดปุ่มให้แสดงขึ้นมา
-            if(buttonToShowAfterDialogue != null)
+            // --- ทำงานตามคำสั่งที่เลือกไว้ใน Inspector เมื่อคุยจบหน้าสุดท้าย ---
+            if (actionAfterDialogue == EndActionType.ShowCanvas)
             {
-                buttonToShowAfterDialogue.SetActive(true); 
+                if (objectToShow != null)
+                {
+                    objectToShow.SetActive(true);
+                }
             }
-            // 2. ปิดหน้าต่างบทสนทนาทิ้งไป
+           else if (actionAfterDialogue == EndActionType.ChangeScene)
+            {
+                if (!string.IsNullOrEmpty(sceneToLoad))
+                {
+                    Debug.Log("กำลังพยายามเปลี่ยนไปที่ซีน: " + sceneToLoad); // เช็คว่าบรรทัดนี้โผล่ใน Console ไหม
+                    SceneManager.LoadScene(sceneToLoad);
+                }
+                else
+                {
+                    Debug.LogWarning("ยังไม่ได้ใส่ชื่อ Scene ใน Inspector!");
+                }
+            }
+
+            // ปิดหน้าต่างบทสนทนาทิ้งไป
             gameObject.SetActive(false); 
         }
     }
